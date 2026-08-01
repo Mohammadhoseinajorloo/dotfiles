@@ -1,0 +1,281 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+die() {
+  printf 'flow: error: %s\n' "$*" >&2
+  exit 1
+}
+
+info() {
+  printf 'flow: %s\n' "$*"
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  flow start
+  flow done ["title"] ["description"]
+  flow clean
+  flow status
+  flow help
+
+Commands:
+  start    Select an existing branch or create a new branch
+  done     Push branch and create PR (interactive, or custom title/body if provided)
+  clean    Switch to base, update, and delete the current branch
+  status   Show the current Git status
+  help     Show this help
+EOF
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 ||
+    die "required command '$1' is not installed"
+}
+
+require_git_repo() {
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    die "current directory is not inside a Git repository"
+}
+
+fzf_checkout() {
+  local -a fzf_out=()
+  local query=""
+  local selection=""
+  local new_branch=""
+  local response=""
+
+  require_command fzf
+  require_git_repo
+
+  mapfile -t fzf_out < <(
+    git branch --format='%(refname:short)' |
+      fzf \
+        --print-query \
+        --height='80%' \
+        --layout=reverse \
+        --border \
+        --prompt='branch> ' \
+        --preview '
+          branch={}
+          if [[ -n "$branch" ]]; then
+            git log "$branch" -30 \
+              --color=always \
+              --date=short \
+              --format="%C(yellow)%h%Creset %C(green)%ad%Creset %s %C(dim)— %an%Creset"
+          fi
+        ' \
+        --preview-window='right:55%:wrap'
+  )
+
+  query="${fzf_out[0]:-}"
+  selection="${fzf_out[1]:-}"
+
+  if [[ -n "$selection" ]]; then
+    info "switching to branch '$selection'"
+    git switch "$selection"
+    nvim .
+    return
+  fi
+
+  if [[ -n "$query" ]]; then
+    new_branch="$(
+      printf '%s' "$query" |
+        tr '[:space:]' '-' |
+        tr -cd '[:alnum:]./_-'
+    )"
+
+    [[ -n "$new_branch" ]] ||
+      die "the entered branch name is invalid"
+
+    git check-ref-format --branch "$new_branch" >/dev/null 2>&1 ||
+      die "'$new_branch' is not a valid Git branch name"
+
+    if git show-ref --verify --quiet "refs/heads/$new_branch"; then
+      info "branch '$new_branch' already exists"
+      git switch "$new_branch"
+      return
+    fi
+
+    printf "Create branch '%s'? [y/N]: " "$new_branch"
+    read -r response
+
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      git switch -c "$new_branch"
+      nvim .
+    else
+      info "cancelled"
+    fi
+  fi
+}
+
+cmd_done() {
+  local root=""
+  local branch=""
+  local base=""
+  local pr_url=""
+  local pr_title="${1:-}"
+  local pr_body="${2:-}"
+
+  require_git_repo
+  require_command gh
+
+  root="$(git rev-parse --show-toplevel)"
+  cd "$root"
+
+  branch="$(git branch --show-current)"
+  base="${FLOW_DEFAULT_BASE:-main}"
+
+  [[ -n "$branch" ]] ||
+    die "detached HEAD; switch to a branch first"
+
+  if [[ "$branch" == "$base" ]]; then
+    die "cannot run 'flow done' on the base branch '$base'"
+  fi
+
+  if ! git show-ref --verify --quiet "refs/heads/$base" &&
+     ! git show-ref --verify --quiet "refs/remotes/origin/$base"; then
+    die "base branch '$base' does not exist; set FLOW_DEFAULT_BASE correctly"
+  fi
+
+  if [[ -n "$(git status --porcelain)" ]]; then
+    git status --short
+    die "you have uncommitted changes; commit or stash them before 'flow done'"
+  fi
+
+  if [[ "$(git rev-list --count "$base..$branch")" -eq 0 ]]; then
+    die "branch '$branch' has no commits ahead of '$base'"
+  fi
+
+  info "pushing branch '$branch' to origin"
+
+  if git rev-parse \
+    --abbrev-ref \
+    --symbolic-full-name '@{upstream}' >/dev/null 2>&1; then
+    git push
+  else
+    git push --set-upstream origin "$branch"
+  fi
+
+  info "checking Pull Request status"
+
+  if pr_url="$(
+    gh pr view "$branch" --json url --jq '.url' 2>/dev/null
+  )"; then
+    printf 'Pull Request already exists:\n%s\n' "$pr_url"
+  else
+    info "creating Pull Request from '$branch' into '$base'"
+
+    if [[ -n "$pr_title" ]]; then
+      pr_url="$(
+        gh pr create \
+          --title "$pr_title" \
+          --body "${pr_body}" \
+          --base "$base" \
+          --head "$branch"
+      )"
+    else
+        gh pr create \
+          --base "$base" \
+          --head "$branch" \
+          --web=false
+    fi
+
+    printf 'Pull Request created:\n%s\n' "$pr_url"
+  fi
+}
+
+cmd_status() {
+  require_git_repo
+
+  printf 'Repository: %s\n' "$(git rev-parse --show-toplevel)"
+  printf 'Branch:     %s\n' "$(git branch --show-current)"
+  printf '\n'
+
+  git status --short --branch
+}
+
+cmd_clean() {
+  local root=""
+  local branch=""
+  local base=""
+
+  require_git_repo
+
+  root="$(git rev-parse --show-toplevel)"
+  cd "$root"
+
+  branch="$(git branch --show-current)"
+  base="${FLOW_DEFAULT_BASE:-main}"
+
+  if [[ "$branch" == "$base" ]]; then
+    die "You are already on the base branch '$base'. Run this command from the feature branch you want to clean."
+  fi
+
+  info "Preparing to clean branch '$branch'..."
+
+  info "Switching to base branch '$base'..."
+  git switch "$base"
+
+  info "Updating '$base' from remote..."
+  git pull origin "$base" --ff-only || warning "Could not fast-forward '$base' from remote. Pls check manually."
+
+  git remote prune origin >/dev/null 2>&1 || true
+
+  info "Deleting local branch '$branch'..."
+  if git branch -d "$branch" >/dev/null 2>&1; then
+    info "Successfully deleted branch '$branch'."
+  else
+    printf "⚠️ Branch '%s' is not fully merged into '%s'. Force delete? [y/N]: " "$branch" "$base"
+    local response=""
+    read -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+      git branch -D "$branch"
+      info "Force deleted branch '$branch'."
+    else
+      info "Clean cancelled. Branch '$branch' was kept."
+      git switch "$branch"
+      return
+    fi
+  fi
+}
+
+warning() {
+  printf 'flow: warning: %s\n' "$*" >&2
+}
+
+main() {
+  local command="${1:-help}"
+
+  shift || true
+
+  case "$command" in
+    start)
+      fzf_checkout "$@"
+      ;;
+
+    done)
+      cmd_done "$@"
+      ;;
+
+    status)
+      cmd_status "$@"
+      ;;
+
+    clean)
+      cmd_clean "$@"
+      ;;
+
+    help | --help | -h)
+      usage
+      ;;
+
+    *)
+      usage >&2
+      die "unknown command '$command'"
+      ;;
+  esac
+}
+
+main "$@"
