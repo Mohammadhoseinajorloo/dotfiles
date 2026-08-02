@@ -42,6 +42,18 @@ require_git_repo() {
     die "current directory is not inside a Git repository"
 }
 
+get_base_branch() {
+  local detected_base
+  detected_base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
+
+  if [[ "$detected_base" == "HEAD" ]]; then
+    detected_base=""
+  fi
+
+  # اولویت: FLOW_DEFAULT_BASE -> تشخیص از روی origin/HEAD -> پیش‌فرض dev
+  echo "${FLOW_DEFAULT_BASE:-${detected_base:-dev}}"
+}
+
 fzf_checkout() {
   local -a fzf_out=()
   local query=""
@@ -130,8 +142,7 @@ cmd_done() {
   cd "$root"
 
   branch="$(git branch --show-current)"
-  detected_base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
-  base="${FLOW_DEFAULT_BASE:-${detected_base:-main}}"
+  base="$(get_base_branch)"
 
   [[ -n "$branch" ]] ||
     die "detached HEAD; switch to a branch first"
@@ -215,8 +226,7 @@ cmd_clean() {
   cd "$root"
 
   branch="$(git branch --show-current)"
-  detected_base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
-  base="${FLOW_DEFAULT_BASE:-${detected_base:-main}}"
+  base="$(get_base_branch)"
 
   if [[ "$branch" == "$base" ]]; then
     die "You are already on the base branch '$base'. Run this command from the feature branch you want to clean."
