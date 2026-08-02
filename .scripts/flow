@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 
+
 die() {
   printf 'flow: error: %s\n' "$*" >&2
   exit 1
@@ -117,6 +118,8 @@ cmd_done() {
   local pr_url=""
   local pr_title="${1:-}"
   local pr_body="${2:-}"
+  local detected_base
+
 
   require_git_repo
   require_command gh
@@ -125,7 +128,8 @@ cmd_done() {
   cd "$root"
 
   branch="$(git branch --show-current)"
-  base="${FLOW_DEFAULT_BASE:-main}"
+  detected_base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
+  base="${FLOW_DEFAULT_BASE:-${detected_base:-main}}"
 
   [[ -n "$branch" ]] ||
     die "detached HEAD; switch to a branch first"
@@ -200,6 +204,8 @@ cmd_clean() {
   local root=""
   local branch=""
   local base=""
+  local detected_base
+
 
   require_git_repo
 
@@ -207,7 +213,8 @@ cmd_clean() {
   cd "$root"
 
   branch="$(git branch --show-current)"
-  base="${FLOW_DEFAULT_BASE:-main}"
+  detected_base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed 's|^origin/||')"
+  base="${FLOW_DEFAULT_BASE:-${detected_base:-main}}"
 
   if [[ "$branch" == "$base" ]]; then
     die "You are already on the base branch '$base'. Run this command from the feature branch you want to clean."
