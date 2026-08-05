@@ -136,7 +136,6 @@ cmd_done() {
 
   require_git_repo
   require_command gh
-  require_command pre-commit
   require_command act
 
   root="$(git rev-parse --show-toplevel)"
@@ -166,9 +165,6 @@ cmd_done() {
     die "branch '$branch' has no commits ahead of '$base'"
   fi
 
-  info "running pre-commit hooks for pre-push stage"
-  pre-commit run --hook-stage pre-push --all-files
-
   info "pushing branch '$branch' to origin"
 
   if git rev-parse \
@@ -187,7 +183,8 @@ cmd_done() {
     printf 'Pull Request already exists:\n%s\n' "$pr_url"
   else
     info "running local GitHub Actions pull_request workflow with act"
-    act pull_request
+    act pull_request --container-options "-v $HOME/.gitconfig:/root/.gitconfig:ro -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+
 
     info "creating Pull Request from '$branch' into '$base'"
 
