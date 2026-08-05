@@ -132,11 +132,12 @@ cmd_done() {
   local pr_url=""
   local pr_title="${1:-}"
   local pr_body="${2:-}"
-  local detected_base
 
 
   require_git_repo
   require_command gh
+  require_command pre-commit
+  require_command act
 
   root="$(git rev-parse --show-toplevel)"
   cd "$root"
@@ -165,6 +166,9 @@ cmd_done() {
     die "branch '$branch' has no commits ahead of '$base'"
   fi
 
+  info "running pre-commit hooks for pre-push stage"
+  pre-commit run --hook-stage pre-push --all-files
+
   info "pushing branch '$branch' to origin"
 
   if git rev-parse \
@@ -182,6 +186,9 @@ cmd_done() {
   )"; then
     printf 'Pull Request already exists:\n%s\n' "$pr_url"
   else
+    info "running local GitHub Actions pull_request workflow with act"
+    act pull_request
+
     info "creating Pull Request from '$branch' into '$base'"
 
     if [[ -n "$pr_title" ]]; then
