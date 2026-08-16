@@ -1,4 +1,4 @@
-export DOTFILES="$HOME/dotfiles"
+export DOTFILES="$HOME/.dotfiles"
 
 alias dotfiles='git -C "$DOTFILES"'
 alias dotstatus='git -C "$DOTFILES" status'
