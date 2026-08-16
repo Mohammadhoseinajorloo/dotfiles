@@ -5,12 +5,6 @@ HISTFILE="$HOME/.zsh_history"
 HISTSIZE=1000
 SAVEHIST=$HISTSIZE
 
-#############################################
-############# EXPORT ########################
-#############################################
-export GH_EDITOR=nvim
-
-
 setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_IGNORE_SPACE
@@ -28,7 +22,7 @@ alias reload="source ~/.zshrc"
 #############################################
 ############ UPDATEING PATHS   ##############
 #############################################
-MY_SCRIPT_PATH="$HOME/dotfiles/scripts"
+MY_SCRIPT_PATH="$HOME/.scripts"
 
 if [[ ":$PATH:" != *":$MY_SCRIPT_PATH:"* ]]; then
   export PATH="$MY_SCRIPT_PATH:$PATH"
@@ -45,3 +39,4 @@ done
 for modules_file in $ZSH_CONFIG_DIR/modules/*.zsh;do
   source "$modules_file"
 done
+
