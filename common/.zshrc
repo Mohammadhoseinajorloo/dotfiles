@@ -22,7 +22,7 @@ alias reload="source ~/.zshrc"
 #############################################
 ############ UPDATEING PATHS   ##############
 #############################################
-MY_SCRIPT_PATH="$HOME/.scripts"
+MY_SCRIPT_PATH="$HOME/dotfiles/scripts"
 
 if [[ ":$PATH:" != *":$MY_SCRIPT_PATH:"* ]]; then
   export PATH="$MY_SCRIPT_PATH:$PATH"
