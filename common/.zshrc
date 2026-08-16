@@ -24,21 +24,11 @@ setopt SHARE_HISTORY
 #############################################
 alias zshrc="nvim ~/.zshrc"
 alias reload="source ~/.zshrc"
-alias taskv2="python3 ~/task.py"
-
-
-#############################################
-############### FLOW ALIAS CONFIG ###########
-#############################################
-alias fs="flow start"
-alias fd="flow done"
-alias fcl="flow clean"
-alias fstat="flow status"
 
 #############################################
 ############ UPDATEING PATHS   ##############
 #############################################
-MY_SCRIPT_PATH="$HOME/dotfiles/.scripts"
+MY_SCRIPT_PATH="$HOME/dotfiles/scripts"
 
 if [[ ":$PATH:" != *":$MY_SCRIPT_PATH:"* ]]; then
   export PATH="$MY_SCRIPT_PATH:$PATH"
@@ -55,20 +45,3 @@ done
 for modules_file in $ZSH_CONFIG_DIR/modules/*.zsh;do
   source "$modules_file"
 done
-
-# Android SDK (APT version)
-export ANDROID_HOME=/usr/lib/android-sdk
-export ANDROID_SDK_ROOT=/usr/lib/android-sdk
-
-export PATH=$PATH:/usr/lib/android-sdk/platform-tools
-export PATH=$PATH:/usr/lib/android-sdk/tools
-export PATH=$PATH:/usr/lib/android-sdk/tools/bin
-
-# Add all build-tools versions
-for dir in /usr/lib/android-sdk/build-tools/*; do
-  export PATH=$PATH:$dir
-done
-
-
-# GapCode
-export PATH="/home/mohammad/.gapcode/bin:$PATH"

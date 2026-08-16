@@ -1,0 +1,37 @@
+# Core terminal/development environment
+git
+stow
+neovim
+tmux
+btop
+zsh
+lazygit
+gh
+
+# Neovim / telescope / fzf / plugins requirements
+ripgrep
+fd-find
+fzf
+curl
+wget
+unzip
+gzip
+tar
+jq
+
+# Build tools used by some Neovim plugins
+build-essential
+
+# Runtimes
+python3
+python3-pip
+python3-venv
+pipx
+nodejs
+npm
+
+# Linters / formatters / dev utilities
+shellcheck
+yamllint
+lua-language-server
+
