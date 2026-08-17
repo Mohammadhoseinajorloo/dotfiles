@@ -1,8 +1,0 @@
-.config/nvim/lazy-lock.json
-.newsboat/cache.db
-.newsboat/history.search
-.newsboat/cache.db.lock
-.newsboat/pb-lock.pid
-.newsboat/queue
-.tmux/plugins
-*.log

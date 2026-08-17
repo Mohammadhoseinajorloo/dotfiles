@@ -7,6 +7,7 @@ btop
 zsh
 lazygit
 gh
+xfce4-terminal
 
 # Neovim / telescope / fzf / plugins requirements
 ripgrep
