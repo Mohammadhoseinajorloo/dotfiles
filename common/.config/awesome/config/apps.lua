@@ -1,19 +1,13 @@
 local awful = require("awful")
+
 local apps = {}
 
-terminal = "xfce4-terminal"
-editor = os.getenv("EDITOR") or "nvim"
-editor_cmd = terminal .. " -e " .. editor
+apps.terminal = "xfce4-terminal"
+apps.editor = os.getenv("EDITOR") or "nvim"
+apps.editor_cmd = apps.terminal .. " -e " .. apps.editor
+apps.modkey = "Mod4"
 
--- Default modkey.
--- Usually, Mod4 is the key with a logo between Control and Alt.
--- If you do not like this or do not have such a key,
--- I suggest you to remap Mod4 to another key using xmodmap or other tools.
--- However, you can use another modifier like Mod1, but it may interact with others.
-modkey = "Mod4"
-
--- Table of layouts to cover with awful.layout.inc, order matters.
-awful.layout.layouts = {
+apps.layouts = {
   awful.layout.suit.floating,
   awful.layout.suit.tile,
   awful.layout.suit.tile.left,
@@ -27,9 +21,6 @@ awful.layout.layouts = {
   awful.layout.suit.max.fullscreen,
   awful.layout.suit.magnifier,
   awful.layout.suit.corner.nw,
-  -- awful.layout.suit.corner.ne,
-  -- awful.layout.suit.corner.sw,
-  -- awful.layout.suit.corner.se,
 }
 
 return apps
