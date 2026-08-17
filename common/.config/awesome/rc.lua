@@ -62,5 +62,8 @@ require("config.wibar")(menu)
 -- Rules
 require("config.rules")(keys)
 
+-- Autostart
+require("config.autostart")
+
 -- Signals
 require("config.signals")()
