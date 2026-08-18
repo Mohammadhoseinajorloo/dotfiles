@@ -1,4 +1,5 @@
-common/.config/google-chrome/*
-common/.config/awesome/theme/*
-common/.config/gh/hosts.yml
+common/.config/google-chrome/
+common/.config/awesome/theme/
+common/.config/gh/
+common/.config/act/
 
