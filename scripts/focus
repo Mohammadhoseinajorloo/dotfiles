@@ -1,0 +1,5 @@
+!#bin/bash
+
+# first crate Music[^1] after run script
+  # [1]: Music profile in firefox with login in songsara
+firefox -P Music "https://songsara.net/mood/focus/" &

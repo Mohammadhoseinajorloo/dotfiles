@@ -125,6 +125,14 @@ fzf_checkout() {
   fi
 }
 
+has_github_workflows() {
+  local workflow_dir=".github/workflows"
+
+  [[ -d "$workflow_dir" ]] || return 1
+
+  find "$workflow_dir" -maxdepth 1 -type f \( -name '*.yml' -o -name '*.yaml' \) | grep -q .
+}
+
 cmd_done() {
   local root=""
   local branch=""
@@ -182,8 +190,13 @@ cmd_done() {
   )"; then
     printf 'Pull Request already exists:\n%s\n' "$pr_url"
   else
-    info "running local GitHub Actions pull_request workflow with act"
-    act pull_request --container-options "-v $HOME/.gitconfig:/root/.gitconfig:ro -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+    if has_github_workflows; then
+      info "running local GitHub Actions pull_request workflow with act"
+      act pull_request --container-options "-v $HOME/.gitconfig:/root/.gitconfig:ro -v $SSH_AUTH_SOCK:/ssh-agent -e SSH_AUTH_SOCK=/ssh-agent"
+    else
+      info "no GitHub Actions workflow found in .github/workflows; skipping act"
+    fi
+
 
 
     info "creating Pull Request from '$branch' into '$base'"

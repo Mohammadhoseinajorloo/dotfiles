@@ -7,6 +7,7 @@ btop
 zsh
 lazygit
 github-cli
+act
 xfce4-terminal
 
 # Neovim / telescope / fzf / plugins requirements
