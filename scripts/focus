@@ -2,4 +2,7 @@
 
 # first crate Music[^1] after run script
   # [1]: Music profile in firefox with login in songsara
-firefox -P Music "https://songsara.net/mood/focus/" &
+#!/usr/bin/env bash
+
+firefox --no-remote --class "songsara" -P Music --new-window "https://songsara.net/mood/focus/" >/dev/null 2>&1 &
+
