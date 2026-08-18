@@ -1,4 +1,4 @@
-!#bin/bash
+#!/usr/bin/env bash
 
 # first crate Music[^1] after run script
   # [1]: Music profile in firefox with login in songsara
