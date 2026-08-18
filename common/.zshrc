@@ -13,6 +13,9 @@ setopt HIST_REDUCE_BLANKS
 setopt INC_APPEND_HISTORY
 setopt SHARE_HISTORY
 
+export EDITOR="nvim"
+export VISUAL="nvim"
+
 #############################################
 ############### ALIAS CONFIG ################
 #############################################
