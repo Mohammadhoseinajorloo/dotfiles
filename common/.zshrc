@@ -16,6 +16,9 @@ setopt SHARE_HISTORY
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+bindkey '^P' up-history
+bindkey '^N' down-history
+
 #############################################
 ############### ALIAS CONFIG ################
 #############################################
