@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+current="$1"
+tmux list-sessions -F '#S' 2>/dev/null | grep -vxF "$current"
+
